@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 
 const read = (path) => readFileSync(new URL(`../../${path}`, import.meta.url), 'utf8');
 
@@ -56,6 +58,30 @@ test('runtime preflight reports the live model check only when explicitly reques
   const script = read('scripts/runtime-preflight.mjs');
   assert.match(script, /result\.requireModel/);
   assert.match(script, /Model provider:.*result\.modelCheck/);
+});
+
+test('runtime preflight CLI entrypoint actually executes main() cross-platform (regression: Windows argv/URL mismatch)', async () => {
+  // Regression guard: comparing `import.meta.url` to a hand-built `file://${process.argv[1]}`
+  // string never matches on Windows (drive-letter + backslash path vs. URL-encoded forward
+  // slashes), so `main()` silently never ran, the script printed nothing, and always exited 0
+  // regardless of actual preflight results. This spawns the real CLI (unreachable health
+  // endpoint, no env) and asserts it fails loudly instead of succeeding silently.
+  const scriptUrl = new URL('../../scripts/runtime-preflight.mjs', import.meta.url);
+  const result = spawnSync(process.execPath, [fileURLToPath(scriptUrl)], {
+    encoding: 'utf8',
+    env: {
+      ...process.env,
+      // Port 1 is reserved and unused, so the fetch reliably fails fast without a listener.
+      PROMPT_OS_BASE_URL: 'http://127.0.0.1:1',
+      NEXT_PUBLIC_SUPABASE_URL: '',
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: '',
+    },
+  });
+
+  // Before the fix, the main() guard never matched on Windows, so the CLI printed nothing to
+  // stdout/stderr and always exited 0 -- silently masking a real preflight failure.
+  assert.notEqual(result.status, 0, 'preflight CLI must exit non-zero when the health check cannot complete');
+  assert.match(result.stderr, /Runtime preflight failed/);
 });
 
 test('CI has an opt-in live OpenAI provider smoke job guarded by repository secrets', () => {

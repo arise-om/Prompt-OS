@@ -1,4 +1,5 @@
 import process from 'node:process';
+import { pathToFileURL } from 'node:url';
 
 const REQUIRED_ENVIRONMENT = [
   'NEXT_PUBLIC_SUPABASE_URL',
@@ -106,6 +107,6 @@ async function main() {
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   await main();
 }
