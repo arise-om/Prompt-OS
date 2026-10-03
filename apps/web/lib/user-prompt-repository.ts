@@ -105,7 +105,7 @@ async function getCurrentUserPromptRows(id?: string): Promise<PromptWithLatest[]
   if (id) query = query.eq("id", id);
 
   const { data: promptRows, error: promptError } = await query;
-  if (promptError || !promptRows) return promptRows ?? [];
+  if (promptError || !promptRows) return [];
   if (!promptRows.length) return [];
 
   const promptIds = promptRows.map((prompt) => prompt.id);

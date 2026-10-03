@@ -8,7 +8,7 @@
   },
   "scripts": {
     "validate:foundation": "node scripts/validate-foundation.mjs",
-    "typecheck": "tsc --noEmit --pretty false",
+    "typecheck": "tsc --project apps/web/tsconfig.json --noEmit --pretty false",
     "dev": "pnpm --filter @prompt-os/web dev",
     "build": "pnpm --filter @prompt-os/web build",
     "start": "pnpm --filter @prompt-os/web start",

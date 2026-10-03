@@ -146,11 +146,12 @@ test('saved prompt versions persist the exact Prompt Auditor snapshot', () => {
   const action = read('apps/web/app/builder/actions.ts');
   const migration = read('supabase/migrations/0007_prompt_audit_snapshots_and_evaluation_metadata.sql');
   assert.match(action, /auditPrompt/);
+  assert.match(action, /function auditFindingsJson/);
   assert.match(action, /p_audit_score: audit\.score/);
-  assert.match(action, /p_audit_findings: audit\.findings/);
+  assert.match(action, /p_audit_findings: auditFindingsJson\(audit\.findings\)/);
   assert.match(action, /p_audit_missing_sections: audit\.missingSections/);
   assert.match(action, /p_audit_score: audit\.score/);
-  assert.match(action, /p_audit_findings: audit\.findings/);
+  assert.match(action, /p_audit_findings: auditFindingsJson\(audit\.findings\)/);
   assert.match(action, /p_audit_missing_sections: audit\.missingSections/);
   assert.match(migration, /audit_score/);
   assert.match(migration, /audit_findings/);

@@ -17,6 +17,25 @@ function objectRecord(value: Json): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
 }
 
+function jsonValue(value: unknown): Json {
+  if (value === null) return null;
+  if (typeof value === "string") return value;
+  if (typeof value === "boolean") return value;
+  if (typeof value === "number") {
+    if (!Number.isFinite(value)) throw new Error("Workflow persistence only accepts finite JSON numbers");
+    return value;
+  }
+  if (Array.isArray(value)) return value.map(jsonValue);
+  if (typeof value === "object") {
+    const result: { [key: string]: Json | undefined } = {};
+    for (const [key, item] of Object.entries(value)) {
+      if (item !== undefined) result[key] = jsonValue(item);
+    }
+    return result;
+  }
+  throw new Error("Workflow persistence only accepts JSON-compatible values");
+}
+
 function restoreWorkflowResult(row: {
   id: string;
   workflow_id: string;
@@ -27,6 +46,8 @@ function restoreWorkflowResult(row: {
   state: Json;
   pending_approval: Json | null;
   failure: Json | null;
+  created_at: string;
+  updated_at: string;
 }): WorkflowRunRecord {
   const state = objectRecord(row.state);
   const pending = row.pending_approval && objectRecord(row.pending_approval);
@@ -147,14 +168,14 @@ export async function createWorkflowRun(input: {
     p_workflow_id: input.workflowId,
     p_status: input.status,
     p_current_step_id: input.currentStepId ?? null,
-    p_state: {
+    p_state: jsonValue({
       data: input.result.data,
       events: input.result.events,
       attempts: input.result.attempts,
       transitions: input.result.transitions,
-    } as Json,
-    p_pending_approval: input.result.pendingApproval ? input.result.pendingApproval as Json : null,
-    p_failure: input.result.failure ? input.result.failure as Json : null,
+    }),
+    p_pending_approval: input.result.pendingApproval ? jsonValue(input.result.pendingApproval) : null,
+    p_failure: input.result.failure ? jsonValue(input.result.failure) : null,
   });
   if (error || !data) return null;
   return data;
@@ -166,14 +187,14 @@ export async function updateWorkflowRun(runId: string, result: WorkflowExecution
     p_run_id: runId,
     p_status: result.status,
     p_current_step_id: result.currentStepId ?? null,
-    p_state: {
+    p_state: jsonValue({
       data: result.data,
       events: result.events,
       attempts: result.attempts,
       transitions: result.transitions,
-    } as Json,
-    p_pending_approval: result.pendingApproval ? result.pendingApproval as Json : null,
-    p_failure: result.failure ? result.failure as Json : null,
+    }),
+    p_pending_approval: result.pendingApproval ? jsonValue(result.pendingApproval) : null,
+    p_failure: result.failure ? jsonValue(result.failure) : null,
   });
   return !error;
 }

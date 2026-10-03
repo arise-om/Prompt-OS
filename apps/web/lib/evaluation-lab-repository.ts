@@ -1,5 +1,5 @@
 import type { Database, Json } from "@prompt-os/db-types";
-import type { EvaluationRun, PromptAuditResult } from "@prompt-os/shared-types";
+import type { EvaluationRun, PromptAuditFinding, PromptAuditResult } from "@prompt-os/shared-types";
 import { createClient } from "./supabase/server";
 import { getSystemPromptById } from "./prompt-repository";
 import { getCurrentUserPromptById } from "./user-prompt-repository";
@@ -26,7 +26,7 @@ function auditFromJson(score: number | null, snapshot: Json | null): PromptAudit
   const findingsValue = record.findings;
   const missingValue = record.missingSections;
   const findings = Array.isArray(findingsValue)
-    ? findingsValue.flatMap((item) => {
+    ? findingsValue.flatMap((item): PromptAuditFinding[] => {
         if (!item || typeof item !== "object" || Array.isArray(item)) return [];
         const finding = item as Record<string, unknown>;
         if (
@@ -194,7 +194,7 @@ function restoreRunAudit(value: Json): PromptAuditResult | undefined {
   const score = record.score;
   if (typeof score !== "number") return undefined;
   const findings = Array.isArray(record.findings)
-    ? record.findings.flatMap((item) => {
+    ? record.findings.flatMap((item): PromptAuditFinding[] => {
         if (!item || typeof item !== "object" || Array.isArray(item)) return [];
         const finding = item as Record<string, unknown>;
         if (

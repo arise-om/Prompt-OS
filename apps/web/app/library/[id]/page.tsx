@@ -130,8 +130,8 @@ export default async function PromptDetailPage({
                     <div className="version-diff__code" role="region" aria-label={`Diff from version ${comparison.from.version} to version ${comparison.to.version}`}>
                       {diff.lines.map((line, index) => (
                         <div key={`${line.type}-${index}`} className={`version-diff__line version-diff__line--${line.type}`}>
-                          <span className="version-diff__number">{line.oldLine ?? ""}</span>
-                          <span className="version-diff__number">{line.newLine ?? ""}</span>
+                          <span className="version-diff__number">{line.type === "added" ? "" : line.oldLine}</span>
+                          <span className="version-diff__number">{line.type === "removed" ? "" : line.newLine}</span>
                           <span className="version-diff__marker">{line.type === "added" ? "+" : line.type === "removed" ? "−" : " "}</span>
                           <code>{line.text || " "}</code>
                         </div>

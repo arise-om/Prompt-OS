@@ -8,15 +8,20 @@
     "start": "next start"
   },
   "dependencies": {
+    "@prompt-os/db-types": "workspace:*",
+    "@prompt-os/evaluation-core": "workspace:*",
+    "@prompt-os/prompt-core": "workspace:*",
+    "@prompt-os/shared-types": "workspace:*",
+    "@prompt-os/workflow-core": "workspace:*",
     "@supabase/ssr": "0.12.7",
     "@supabase/supabase-js": "2.117.2",
     "next": "16.3.8",
     "react": "19.2.0",
-    "react-dom": "19.2.0",
-    "@prompt-os/db-types": "workspace:*",
-    "@prompt-os/evaluation-core": "workspace:*",
-    "@prompt-os/prompt-core": "workspace:*",
-    "@prompt-os/workflow-core": "workspace:*"
+    "react-dom": "19.2.0"
   },
-  "type": "module"
+  "type": "module",
+  "devDependencies": {
+    "@types/node": "26.6.4",
+    "@types/react": "19.3.0"
+  }
 }

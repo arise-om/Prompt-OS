@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { auditPrompt, composePromptDraft, createPromptAuditSnapshot } from "@prompt-os/prompt-core";
+import { auditPrompt, composePromptDraft, createPromptAuditSnapshot, type PromptAuditFinding } from "@prompt-os/prompt-core";
 import { getSystemPromptById } from "../../lib/prompt-repository";
 import { getCurrentUserPromptById } from "../../lib/user-prompt-repository";
 import { hasSupabaseConfig } from "../../lib/supabase/config";
@@ -13,6 +13,15 @@ function textValue(form: FormData, key: string, fallback = "") {
 
 function jsonArray(value: string): string[] {
   return value ? value.split(/[\n,]/).map((item) => item.trim()).filter(Boolean) : [];
+}
+
+function auditFindingsJson(findings: PromptAuditFinding[]) {
+  return findings.map(({ code, severity, message, remediation }) => ({
+    code,
+    severity,
+    message,
+    remediation,
+  }));
 }
 
 export async function savePromptDraft(form: FormData) {
@@ -68,7 +77,7 @@ export async function savePromptDraft(form: FormData) {
       p_evaluation_criteria: [draft.quality, draft.verification].filter(Boolean),
       p_change_summary: "Updated in Prompt Composer",
       p_audit_score: audit.score,
-      p_audit_findings: audit.findings,
+      p_audit_findings: auditFindingsJson(audit.findings),
       p_audit_missing_sections: audit.missingSections,
     });
     if (error || !versionId) redirect(`/builder?id=${encodeURIComponent(editId)}&error=save_failed`);
@@ -89,7 +98,7 @@ export async function savePromptDraft(form: FormData) {
     p_expected_output: draft.output,
     p_evaluation_criteria: [draft.quality, draft.verification].filter(Boolean),
     p_audit_score: audit.score,
-    p_audit_findings: audit.findings,
+    p_audit_findings: auditFindingsJson(audit.findings),
     p_audit_missing_sections: audit.missingSections,
   });
 
