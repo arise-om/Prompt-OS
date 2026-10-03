@@ -36,7 +36,7 @@ test('evaluation action keeps successful redirect outside the model-error catch'
   assert.ok(tryBlock, 'expected model execution try/catch');
   assert.doesNotMatch(tryBlock[1], /status=completed/);
   assert.match(actions, /catch \{[\s\S]*status=model_failed/);
-  assert.match(actions, /}\n\n  redirect\(`\/evaluations\?promptId=.*status=completed/);
+  assert.match(actions, /}\r?\n\r?\n  redirect\(`\/evaluations\?promptId=.*status=completed/);
 });
 
 test('evaluation action exposes a full benchmark suite action', () => {
