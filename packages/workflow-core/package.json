@@ -1,0 +1,8 @@
+{
+  "name": "@prompt-os/workflow-core",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {".": "./src/index.ts"},
+  "dependencies": {"@prompt-os/shared-types": "workspace:*"}
+}

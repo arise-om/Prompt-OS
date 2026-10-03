@@ -1,0 +1,8 @@
+[
+  {"id":"rubric-general-quality","name":"General Output Quality","description":"Measures whether an answer is accurate, relevant, clear, complete, specific and useful.","weight":1,"scoring":"scale"},
+  {"id":"rubric-instruction-adherence","name":"Instruction Adherence","description":"Measures compliance with explicit task requirements, constraints and requested format.","weight":1,"scoring":"scale"},
+  {"id":"rubric-evidence-discipline","name":"Evidence Discipline","description":"Measures whether claims are supported, assumptions are explicit and uncertainty is not concealed.","weight":1,"scoring":"scale"},
+  {"id":"rubric-technical-correctness","name":"Technical Correctness","description":"Measures correctness of technical explanations, code reasoning and implementation details.","weight":1,"scoring":"scale"},
+  {"id":"rubric-actionability","name":"Actionability","description":"Measures whether the output can be used directly to execute a decision, workflow or next step.","weight":1,"scoring":"scale"},
+  {"id":"rubric-format-compliance","name":"Format Compliance","description":"Measures whether the requested structure, schema or artifact format is satisfied.","weight":1,"scoring":"binary"}
+]

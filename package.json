@@ -1,0 +1,26 @@
+{
+  "name": "prompt-os",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@12.8.0",
+  "engines": {
+    "node": ">=24.21.0 <25"
+  },
+  "scripts": {
+    "validate:foundation": "node scripts/validate-foundation.mjs",
+    "typecheck": "tsc --noEmit --pretty false",
+    "dev": "pnpm --filter @prompt-os/web dev",
+    "build": "pnpm --filter @prompt-os/web build",
+    "start": "pnpm --filter @prompt-os/web start",
+    "test:contracts": "node --test --experimental-strip-types tests/contracts/*.test.mjs",
+    "test:prompt-core": "node --test --experimental-strip-types tests/prompt-core/*.test.mjs",
+    "test": "pnpm test:contracts && pnpm test:prompt-core && pnpm test:workflow-core",
+    "test:workflow-core": "node --test --experimental-strip-types tests/workflow-core/*.test.mjs",
+    "preflight:runtime": "node scripts/runtime-preflight.mjs",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.2",
+    "@playwright/test": "1.63.0"
+  }
+}

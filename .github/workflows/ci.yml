@@ -1,0 +1,150 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-placeholder-publishable-key
+      OPENAI_MODEL: gpt-6-luna
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.21.0
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.8.0
+          run_install: false
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+      - name: Validate foundation
+        run: pnpm validate:foundation
+      - name: Full test suite
+        run: pnpm test
+      - name: Typecheck
+        run: pnpm typecheck
+      - name: Production build
+        run: pnpm build
+      - name: Runtime preflight
+        env:
+          PROMPT_OS_BASE_URL: http://127.0.0.1:3000
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm --filter @prompt-os/web start > /tmp/prompt-os-next.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent --show-error http://127.0.0.1:3000/api/health > /tmp/prompt-os-health.json; then
+              break
+            fi
+            if ! kill -0 "$server_pid" 2>/dev/null; then
+              cat /tmp/prompt-os-next.log
+              exit 1
+            fi
+            sleep 1
+          done
+
+          pnpm preflight:runtime
+
+  provider-smoke:
+    if: ${{ github.event_name == 'push' && vars.PROMPT_OS_LIVE_PROVIDER_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-placeholder-publishable-key
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      OPENAI_MODEL: ${{ secrets.OPENAI_MODEL }}
+      PROMPT_OS_REQUIRE_MODEL: true
+      PROMPT_OS_BASE_URL: http://127.0.0.1:3000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.21.0
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.8.0
+          run_install: false
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+      - name: Production build
+        run: pnpm build
+      - name: Live provider preflight
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm --filter @prompt-os/web start > /tmp/prompt-os-next.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent --show-error http://127.0.0.1:3000/api/health > /tmp/prompt-os-health.json; then
+              break
+            fi
+            if ! kill -0 "$server_pid" 2>/dev/null; then
+              cat /tmp/prompt-os-next.log
+              exit 1
+            fi
+            sleep 1
+          done
+
+          pnpm preflight:runtime
+
+
+  e2e-runtime:
+    if: ${{ github.event_name == 'push' && vars.PROMPT_OS_E2E_ENABLED == 'true' }}
+    timeout-minutes: 40
+    runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+      SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+      PROMPT_OS_E2E_EMAIL: ${{ secrets.PROMPT_OS_E2E_EMAIL }}
+      PROMPT_OS_E2E_ENABLED: true
+      PROMPT_OS_E2E_EVALUATE: true
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      OPENAI_MODEL: ${{ secrets.OPENAI_MODEL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.21.0
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.8.0
+          run_install: false
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Production build
+        run: pnpm build
+      - name: Start Prompt OS
+        run: pnpm --filter @prompt-os/web start > /tmp/prompt-os-next.log 2>&1 &
+      - name: Wait for health
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent --show-error http://127.0.0.1:3000/api/health; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/prompt-os-next.log
+          exit 1
+      - name: Run authenticated workflow E2E
+        env:
+          PROMPT_OS_BASE_URL: http://127.0.0.1:3000
+        run: pnpm test:e2e

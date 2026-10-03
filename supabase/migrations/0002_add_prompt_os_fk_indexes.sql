@@ -1,0 +1,14 @@
+create index if not exists idx_context_packs_owner on public.context_packs(owner_user_id);
+create index if not exists idx_context_packs_project on public.context_packs(project_id);
+create index if not exists idx_prompt_components_owner on public.prompt_components(owner_user_id);
+create index if not exists idx_prompt_version_components_component on public.prompt_version_components(component_id);
+create index if not exists idx_prompts_domain on public.prompts(domain_id);
+create index if not exists idx_workflows_project on public.workflows(project_id);
+create index if not exists idx_workflow_steps_workflow on public.workflow_steps(workflow_id);
+create index if not exists idx_evaluation_criteria_owner on public.evaluation_criteria(owner_user_id);
+create index if not exists idx_evaluation_runs_prompt_version on public.evaluation_runs(prompt_version_id);
+create index if not exists idx_evaluation_runs_workflow on public.evaluation_runs(workflow_id);
+create index if not exists idx_evaluation_runs_benchmark on public.evaluation_runs(benchmark_case_id);
+create index if not exists idx_failure_logs_owner on public.failure_logs(owner_user_id);
+create index if not exists idx_failure_logs_prompt on public.failure_logs(prompt_id);
+create index if not exists idx_failure_logs_workflow on public.failure_logs(workflow_id);
